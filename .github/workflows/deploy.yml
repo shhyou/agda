@@ -8,7 +8,6 @@
 name: Deploy
 
 on: ['push']
-  branch: master
 
 defaults:
   run:
