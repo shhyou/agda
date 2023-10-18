@@ -5,24 +5,22 @@
 ##  Edit source in /src/github/workflows/ instead!  ##
 ##                                                  ##
 ######################################################
+name: Deploy
+
+on: ['push']
+  branch: master
+
 defaults:
   run:
     shell: bash
 jobs:
-  auto-cancel:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion
-      == 'success' }}
-    runs-on: Ubuntu-latest
-    steps:
-    - uses: styfle/cancel-workflow-action@0.12.0
-      with:
-        access_token: ${{ github.token }}
   build:
     env:
       ARGS: --disable-executable-profiling --disable-library-profiling
       LINUX_ARGS: --enable-executable-static  --enable-split-sections
       MACOS_ARGS: --flags=enable-cluster-counting
       WIN64_ARGS: --flags=enable-cluster-counting  --enable-split-sections
+      MATRXOS: ${{ matrix.os }}
     if: ${{ always() }}
     needs: auto-cancel
     outputs:
@@ -40,9 +38,12 @@ jobs:
         echo sha="${sha}"                                           >> ${GITHUB_OUTPUT}
         echo nightly="${nightly}"                                   >> ${GITHUB_OUTPUT}
 
+        echo "${OSTYPE}"
+        echo "${MATRXOS}"
+
         if [[ "$OSTYPE" == "msys"* ]]; then
 
-          filename="${nightly}-win64.zip"
+          filename="${nightly}-${sha}-win64.zip"
           echo args="${ARGS} ${WIN64_ARGS}"                         >> ${GITHUB_OUTPUT}
           echo compress-cmd="7z a ${filename} ${nightly} -bb -mx=9" >> ${GITHUB_OUTPUT}
           echo content-type="application/zip"                       >> ${GITHUB_OUTPUT}
@@ -51,7 +52,7 @@ jobs:
 
         elif [[ "$OSTYPE" == "darwin"* ]]; then
 
-          filename="${nightly}-macOS.tar.xz"
+          filename="${nightly}-${sha}-${MATRXOS}.tar.xz"
           echo args="${ARGS} ${MACOS_ARGS}"                         >> ${GITHUB_OUTPUT}
           echo compress-cmd="tar -a -cvf ${filename} ${nightly}"    >> ${GITHUB_OUTPUT}
           echo content-type="application/x-xz"                      >> ${GITHUB_OUTPUT}
@@ -60,7 +61,7 @@ jobs:
 
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
-          filename="${nightly}-linux.tar.xz"
+          filename="${nightly}-${sha}-linux.tar.xz"
           echo args="${ARGS} ${LINUX_ARGS}"                         >> ${GITHUB_OUTPUT}
           echo compress-cmd="tar -a -cvf ${filename} ${nightly}"    >> ${GITHUB_OUTPUT}
           echo content-type="application/x-xz"                      >> ${GITHUB_OUTPUT}
@@ -187,40 +188,12 @@ jobs:
         if-no-files-found: error
         name: ${{ steps.vars.outputs.filename }}
         path: ${{ steps.vars.outputs.filename }}
-        retention-days: 3
+        retention-days: 90
     strategy:
       fail-fast: false
       matrix:
         ghc-ver:
         - '9.6'
-        include:
-        - ghc-ver: '9.4'
-          os: ubuntu-20.04
         os:
-        - windows-latest
+        - macos-latest-xlarge
         - macos-latest
-  deploy:
-    if: ${{ github.ref == 'refs/heads/master' }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/download-artifact@v3
-      with:
-        path: artifacts
-    - env:
-        GITHUB_TOKEN: ${{ github.token }}
-      name: Create/replace the nightly release and upload artifacts as release assets
-      run: |
-        gh release delete 'nightly' --repo agda/agda --cleanup-tag --yes || true
-        ls -R artifacts
-        gh release create 'nightly' artifacts/**/* --repo agda/agda --generate-notes --notes-start-tag v2.6.4 --title "Nightly Build (${{ needs.build.outputs.sha }}@master)"
-name: Deploy
-'on':
-  workflow_dispatch: null
-  workflow_run:
-    branches:
-    - master
-    types:
-    - completed
-    workflows:
-    - Build, Test, and Benchmark
