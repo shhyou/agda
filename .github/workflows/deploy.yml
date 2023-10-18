@@ -17,7 +17,7 @@ jobs:
     env:
       ARGS: --disable-executable-profiling --disable-library-profiling
       LINUX_ARGS: --enable-executable-static  --enable-split-sections
-      MACOS_ARGS: --flags=enable-cluster-counting
+      MACOS_ARGS: --flags='enable-cluster-counting optimise-heavily'
       WIN64_ARGS: --flags=enable-cluster-counting  --enable-split-sections
       MATRXOS: ${{ matrix.os }}
     if: ${{ always() }}
@@ -193,5 +193,4 @@ jobs:
         ghc-ver:
         - '9.6'
         os:
-        - macos-latest-xlarge
         - macos-latest
