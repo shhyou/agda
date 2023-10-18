@@ -21,7 +21,6 @@ jobs:
       WIN64_ARGS: --flags=enable-cluster-counting  --enable-split-sections
       MATRXOS: ${{ matrix.os }}
     if: ${{ always() }}
-    needs: auto-cancel
     outputs:
       sha: ${{ steps.vars.outputs.sha }}
     runs-on: ${{ matrix.os }}
