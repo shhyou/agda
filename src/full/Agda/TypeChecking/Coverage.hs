@@ -303,8 +303,17 @@ cover infermissing f cs sc@(SClause tel ps _ _ target) = updateRelevance $ do
       reportSDoc "tc.cover.matching" 20 $ addContext gamma $
           "ps   :" <+> prettyTCM (fmap namedArg ps)
 
+  reportSDoc "tc.cover.beforematch" 20 $ vcat
+    [ ""
+    , "BEFORE match:"
+    , nest 2 $ prettyTCM cs
+    , nest 2 $ prettyTCM (show ps)
+    ]
+
   match cs ps >>= \case
     Yes (i,mps) -> do
+      reportSDoc "tc.cover.aftermatch" 20 $ vcat ["", "match cs ps -> Yes (i,mps)", ""]
+
       reportSLn "tc.cover.cover" 10 $ "pattern covered by clause " ++! show i
       reportSDoc "tc.cover.cover" 20 $ text "with mps = " <+> do addContext tel $ pretty mps
       let cl0 = indexWithDefault __IMPOSSIBLE__ cs i
@@ -326,6 +335,8 @@ cover infermissing f cs sc@(SClause tel ps _ _ target) = updateRelevance $ do
         }
 
     No        ->  do
+      reportSDoc "tc.cover.aftermatch" 20 $ vcat ["", "match cs ps -> No", ""]
+
       reportSLn "tc.cover" 20 $ "pattern is not covered"
       let infer dom = isInstance dom || isJust (domTactic dom)
       if infermissing == YesInferMissing && maybe False infer target
@@ -518,6 +529,15 @@ cover infermissing f cs sc@(SClause tel ps _ _ target) = updateRelevance $ do
           Block _ nvs -> return $ map blockingVarNo nvs
           _           -> return []
         return $ filter (`notElem` nonAbsurdVars) absurdVars
+      reportSDoc "tc.cover.continue" 20 $ vcat
+        [ ""
+        , "IN: continue with clauses:"
+        , nest 2 $ prettyTCM cs
+        , ""
+        , "with BlockingVar xs = " <+> prettyTCM (map blockingVarNo xs)
+        , "in, the same splitclause sc = " <+> prettyTCM sc
+        , ""
+        ]
       r <- altM1 (\ x ->
         let inAbsurdClause = blockingVarNo x `elem` absurdBlockingVarNos
         in  fmap (,x) <$> split Inductive allowPartialCover inAbsurdClause sc x
@@ -1304,7 +1324,12 @@ split' :: CheckEmpty
        -> BlockingVar
        -> TCM (Either SplitError (Either SplitClause Covering))
 split' checkEmpty ind allowPartialCover inserttrailing inAbsurdClause
-       sc@(SClause tel ps _ cps target) (BlockingVar x pcons' plits overlap lazy) =
+       sc@(SClause tel ps _ cps target) bx@(BlockingVar x pcons' plits overlap lazy) = do
+ reportSDoc "tc.cover.split'" 20 $ vcat
+   [ ""
+   , "split': blocking var is" <+> prettyTCM (show bx)
+   , "        sc is" <+> prettyTCM sc 
+   ]
  liftTCM $ runExceptT $ do
   debugInit tel x ps cps
 
