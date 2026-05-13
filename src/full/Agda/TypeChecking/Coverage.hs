@@ -294,7 +294,7 @@ cover infermissing f cs sc@(SClause tel ps _ _ target) = updateRelevance $ do
     , nest 2 $ prettyTCM sc
     , nest 2 $ "target sort =" <+> do addContext tel $ maybe (text "<none>") (prettyTCM . getSort . unDom) target
     ]
-  reportSLn "tc.cover.cover" 80 $ "raw target =\n" ++! show target
+  reportSLn "tc.cover.cover" 999 $ "raw target =\n" ++! show target
   verboseS  "tc.cover.matching" 20 $ do
     reportSLn "tc.cover.matching" 20 $ "clauses when matching:"
     forM_ cs $ \ c -> do
@@ -307,7 +307,6 @@ cover infermissing f cs sc@(SClause tel ps _ _ target) = updateRelevance $ do
     [ ""
     , "BEFORE match:"
     , nest 2 $ prettyTCM cs
-    , nest 2 $ prettyTCM (show ps)
     ]
 
   match cs ps >>= \case
@@ -1173,7 +1172,7 @@ computeNeighbourhood delta1 n delta2 d pars ixs hix tel ps cps c = do
           , "hix    =" <+> text (show hix)
           ]
         ]
-      reportSDoc "tc.cover.split.con" 70 $ vcat
+      reportSDoc "tc.cover.split.con" 999 $ vcat
         [ "computeNeighbourhood"
         , nest 2 $ vcat
           [ "context=" <+> (inTopContext . (text . show) =<< getContextTelescope)
@@ -1327,7 +1326,7 @@ split' checkEmpty ind allowPartialCover inserttrailing inAbsurdClause
        sc@(SClause tel ps _ cps target) bx@(BlockingVar x pcons' plits overlap lazy) = do
  reportSDoc "tc.cover.split'" 20 $ vcat
    [ ""
-   , "split': blocking var is" <+> prettyTCM (show bx)
+   , "split': blocking var is BlockingVar {blockingVarNo = " <+> prettyTCM x <+> "}"
    , "        sc is" <+> prettyTCM sc 
    ]
  liftTCM $ runExceptT $ do
@@ -1491,7 +1490,7 @@ split' checkEmpty ind allowPartialCover inserttrailing inAbsurdClause
           , "cps     =" <+> prettyTCM cps
           ]
         ]
-      reportSDoc "tc.cover.top" 60 $ vcat
+      reportSDoc "tc.cover.top" 999 $ vcat
         [ "TypeChecking.Coverage.split': split"
         , nest 2 $ vcat
           [ "tel     =" <+> (text . show) tel
