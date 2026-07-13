@@ -1,0 +1,7 @@
+agda-PROPCASE -v tc.cover:90 case2.agda
+agda-PROPCASE -v tc.cover:90 case4.agda
+agda-PROPCASE -v tc.cover:90 case5.agda
+agda-PROPCASE -v tc.cover:90 case1.agda
+agda-PROPCASE -v tc.cover:90 -itest/Succeed test/Succeed/Issue8546.agda
+
+caffeinate -d /usr/bin/time -p -l stack build -j12 --flag Agda:debug --flag Agda:enable-cluster-counting  && VERSION_SUFFIX=PROPCASE ../install-agda-dev-bin.sh
